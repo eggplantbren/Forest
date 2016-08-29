@@ -2,6 +2,7 @@
 #define DNest4_Data
 
 #include <vector>
+#include <algorithm>
 
 class Data
 {
@@ -18,6 +19,12 @@ class Data
 		const std::vector<double>& get_x() const { return x; }
         const std::vector<double>& get_y() const { return y; }
         const std::vector<double>& get_y_err() const { return y_err; }
+        double get_x_min() const
+	{ return *std::min_element(x.begin(), x.end()); }
+	double get_x_max() const
+        { return *std::max_element(x.begin(), x.end()); }
+        double get_x_range() const
+        { return get_x_max() - get_x_min(); }
 
 	// Singleton
 	private:
