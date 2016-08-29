@@ -5,22 +5,25 @@
 
 /*
 * Represents the conditional prior for mixture components
-* in (mu, log_sigma) space
+* in (mu, log_width) space
 */
 
 class MyConditionalPrior:public DNest4::ConditionalPrior
 {
 	private:
-        // Location and scale parameter for mu prior
+        static const DNest4::Cauchy cauchy;
+
+        // Location and scale parameter for position prior
         double location_mu;
         double scale_mu;
 
-        // Location and scale parameter for log sigma
-        double location_log_sigma;
-        double scale_log_sigma;
+        // Location and scale parameter for log_width prior
+        double location_log_width;
+        double scale_log_width;
 
-        // Scale parameter for log weight
-        double scale_log_weight;
+        // Location and scale parameter for log_amplitude prior
+        double location_log_amplitude;
+        double scale_log_amplitude;
 
 		double perturb_hyperparameters(DNest4::RNG& rng);
 
