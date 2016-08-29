@@ -7,6 +7,8 @@ class Data
 {
 	private:
 		std::vector<double> x;
+        std::vector<double> y;
+        std::vector<double> y_err;
 
 	public:
 		Data();
@@ -14,6 +16,8 @@ class Data
 
 		// Getters
 		const std::vector<double>& get_x() const { return x; }
+        const std::vector<double>& get_y() const { return y; }
+        const std::vector<double>& get_y_err() const { return y_err; }
 
 	// Singleton
 	private:
