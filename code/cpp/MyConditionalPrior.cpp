@@ -1,6 +1,7 @@
 #include "MyConditionalPrior.h"
 #include "DNest4/code/DNest4.h"
 #include <cmath>
+#include "Data.h"
 
 using namespace DNest4;
 
@@ -13,7 +14,9 @@ MyConditionalPrior::MyConditionalPrior()
 
 void MyConditionalPrior::from_prior(RNG& rng)
 {
-    location_mu = cauchy.generate(rng);
+    const auto& data = Data::get_instance();
+
+    location_mu = data.get_x_min() + data.get_x_range()*rng.rand();
     scale_mu = exp(cauchy.generate(rng));
 
     location_log_width = cauchy.generate(rng);
@@ -32,13 +35,20 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
 
     if(which == 0)
     {
-        logH += cauchy.perturb(location_mu, rng);
+        const auto& data = Data::get_instance();
+        location_mu += data.get_x_range()*rng.randh();
+        wrap(location_mu, data.get_x_min(), data.get_x_max());
     }
     else if(which == 1)
     {
         scale_mu = log(scale_mu);
         logH += cauchy.perturb(scale_mu, rng);
         scale_mu = exp(scale_mu);
+
+        if(scale_mu == 0)
+            scale_mu = 1E-300;
+        if(std::isinf(scale_mu))
+            scale_mu = 1E300;
     }
     else if(which == 2)
     {
@@ -64,7 +74,6 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
 }
 
 // vec = {mu, log_width, log_amplitude}
-
 double MyConditionalPrior::log_pdf(const std::vector<double>& vec) const
 {
     // Three Laplace distributions
