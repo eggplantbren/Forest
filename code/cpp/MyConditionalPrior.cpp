@@ -15,11 +15,12 @@ MyConditionalPrior::MyConditionalPrior()
 void MyConditionalPrior::from_prior(RNG& rng)
 {
     const auto& data = Data::get_instance();
+    double range = data.get_x_range();
 
     location_mu = data.get_x_min() + data.get_x_range()*rng.rand();
-    scale_mu = exp(cauchy.generate(rng));
+    scale_mu = exp(log(1E-2*range) + log(1E5)*rng.rand());
 
-    location_log_width = cauchy.generate(rng);
+    location_log_width = log(1E-4*range) + log(1E4)*rng.rand();
     scale_log_width = 5.0*rng.rand();
 
     location_log_amplitude = cauchy.generate(rng);
@@ -30,29 +31,28 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
 {
 	double logH = 0.0;
 
+    const auto& data = Data::get_instance();
+    double range = data.get_x_range();
+
     // Choose a parameter to move
     int which = rng.rand_int(6);
 
     if(which == 0)
     {
-        const auto& data = Data::get_instance();
         location_mu += data.get_x_range()*rng.randh();
         wrap(location_mu, data.get_x_min(), data.get_x_max());
     }
     else if(which == 1)
     {
         scale_mu = log(scale_mu);
-        logH += cauchy.perturb(scale_mu, rng);
+        scale_mu += log(1E5)*rng.randh();
+        wrap(scale_mu, log(1E-2*range), log(1E3*range));
         scale_mu = exp(scale_mu);
-
-        if(scale_mu == 0)
-            scale_mu = 1E-300;
-        if(std::isinf(scale_mu))
-            scale_mu = 1E300;
     }
     else if(which == 2)
     {
-        logH += cauchy.perturb(location_log_width, rng);
+        location_log_width += log(1E4)*rng.randh();
+        wrap(location_log_width, log(1E-4*range), log(range));
     }
     else if(which == 3)
     {
