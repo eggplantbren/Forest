@@ -4,11 +4,19 @@
 #include "DNest4/code/DNest4.h"
 #include "MyConditionalPrior.h"
 #include <ostream>
+#include <vector>
 
 class MyModel
 {
 	private:
+        // The gaussians
         DNest4::RJObject<MyConditionalPrior> gaussians;
+
+        // Model prediction
+        std::vector<double> model;
+
+        // Calculate the model prediction
+        void calculate_model(bool update=false);
 
 	public:
 		// Constructor only gives size of params
