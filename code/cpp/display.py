@@ -16,7 +16,7 @@ for i in range(0, num):
 plt.show()
 
 # Posterior for N
-N = posterior_sample[:,109]
+N = posterior_sample[:,107]
 bins = np.arange(0, 101)
 width = 0.3
 plt.hist(N, bins=bins-0.5*width, width=width, color="k", alpha=0.2)

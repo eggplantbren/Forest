@@ -13,10 +13,6 @@ class MyConditionalPrior:public DNest4::ConditionalPrior
 	private:
         static const DNest4::Cauchy cauchy;
 
-        // Location and scale parameter for position prior
-        double location_mu;
-        double scale_mu;
-
         // Location and scale parameter for log_width prior
         double location_log_width;
         double scale_log_width;

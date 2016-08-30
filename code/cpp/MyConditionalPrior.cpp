@@ -17,9 +17,6 @@ void MyConditionalPrior::from_prior(RNG& rng)
     const auto& data = Data::get_instance();
     double range = data.get_x_range();
 
-    location_mu = data.get_x_min() + data.get_x_range()*rng.rand();
-    scale_mu = exp(log(1E-2*range) + log(1E5)*rng.rand());
-
     location_log_width = log(1E-4*range) + log(1E4)*rng.rand();
     scale_log_width = 5.0*rng.rand();
 
@@ -35,31 +32,19 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
     double range = data.get_x_range();
 
     // Choose a parameter to move
-    int which = rng.rand_int(6);
+    int which = rng.rand_int(4);
 
     if(which == 0)
-    {
-        location_mu += data.get_x_range()*rng.randh();
-        wrap(location_mu, data.get_x_min(), data.get_x_max());
-    }
-    else if(which == 1)
-    {
-        scale_mu = log(scale_mu);
-        scale_mu += log(1E5)*rng.randh();
-        wrap(scale_mu, log(1E-2*range), log(1E3*range));
-        scale_mu = exp(scale_mu);
-    }
-    else if(which == 2)
     {
         location_log_width += log(1E4)*rng.randh();
         wrap(location_log_width, log(1E-4*range), log(range));
     }
-    else if(which == 3)
+    else if(which == 1)
     {
         scale_log_width += 5.0*rng.randh();
         wrap(scale_log_width, 0.0, 5.0);
     }
-    else if(which == 4)
+    else if(which == 2)
     {
         logH += cauchy.perturb(location_log_amplitude, rng);
         wrap(scale_log_amplitude, 0.0, 5.0);
@@ -76,41 +61,44 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
 // vec = {mu, log_width, log_amplitude}
 double MyConditionalPrior::log_pdf(const std::vector<double>& vec) const
 {
-    // Three Laplace distributions
-    Laplace l1(location_mu, scale_mu);
+    const auto& data = Data::get_instance();
+
+    if(vec[0] < data.get_x_min() || vec[0] > data.get_x_max())
+        return -1E300;
+
     Laplace l2(location_log_width, scale_log_width);
     Laplace l3(location_log_amplitude, scale_log_amplitude);
 
-	return l1.log_pdf(vec[0]) + l2.log_pdf(vec[1]) + l3.log_pdf(vec[2]);
+	return l2.log_pdf(vec[1]) + l3.log_pdf(vec[2]);
 }
 
 void MyConditionalPrior::from_uniform(std::vector<double>& vec) const
 {
-    // Three Laplace distributions
-    Laplace l1(location_mu, scale_mu);
+    const auto& data = Data::get_instance();
+
     Laplace l2(location_log_width, scale_log_width);
     Laplace l3(location_log_amplitude, scale_log_amplitude);
 
-    vec[0] = l1.cdf_inverse(vec[0]);
+    vec[0] = data.get_x_min() + data.get_x_range()*vec[0];
     vec[1] = l2.cdf_inverse(vec[1]);
     vec[2] = l3.cdf_inverse(vec[2]);
 }
 
 void MyConditionalPrior::to_uniform(std::vector<double>& vec) const
 {
-    // Three Laplace distributions
-    Laplace l1(location_mu, scale_mu);
+    const auto& data = Data::get_instance();
+
     Laplace l2(location_log_width, scale_log_width);
     Laplace l3(location_log_amplitude, scale_log_amplitude);
 
-    vec[0] = l1.cdf(vec[0]);
+    vec[0] = (vec[0] - data.get_x_min())/data.get_x_range();
     vec[1] = l2.cdf(vec[1]);
     vec[2] = l3.cdf(vec[2]);
 }
 
 void MyConditionalPrior::print(std::ostream& out) const
 {
-    out<<location_mu<<' '<<scale_mu<<' '<<location_log_width<<' ';
+    out<<location_log_width<<' ';
     out<<scale_log_width<<' '<<location_log_amplitude<<' ';
     out<<scale_log_amplitude<<' ';
 }
